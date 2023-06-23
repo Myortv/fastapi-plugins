@@ -8,7 +8,7 @@ setup(
     author='myortv',
     authpr_email='myortv@proton.me',
     license='MIT',
-    pakages=['fastapi-plugins'],
+    pakages=['fastapiplugins'],
     install_requires=[
         'asyncpg>=0.26.0',
         'aiohttp>=3.8.0',
