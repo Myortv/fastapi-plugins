@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='fastapi-plugins',
+    name='fastapiplugins',
     version='0.1.2',
     description='Simplified version of plugins from Rolefr for fastapi',
     url='https://github.com/Myortv/fastapi-plugins',
