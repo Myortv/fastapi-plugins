@@ -38,7 +38,7 @@ class DatabaseManager(AbstractPlugin):
         )
 
     @classmethod
-    def make_async(cls):
+    def acqure_connection(cls):
         def decorator(func):
             async def wrapper(*args, **kwargs):
                 try:
