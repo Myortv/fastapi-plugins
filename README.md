@@ -1,5 +1,5 @@
 # fastapi-plugins
-Simplified version of plugins from Rolefr for fastapi. Contains plugins for asyncpg, pyignite and other.
+Simplified version of plugins from Rolefr for fastapi. Contains plugins for asyncpg, rabbitmq and other.
 
 # Api Reference
 Check examples dir, to see minimal running examples.
