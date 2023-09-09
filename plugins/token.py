@@ -1,10 +1,14 @@
 import logging
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from typing import Callable
 
 import jwt
+
+
+class BadJwtException(Exception):
+    pass
 
 
 class TokenManager:
@@ -15,13 +19,20 @@ class TokenManager:
         algorithm: str,
         custom_validator: Callable = None,
     ):
-        self.privat_key = str(privat_key)
-        self.public_key = str(public_key)
+        self.privat_key = privat_key
+        self.public_key = public_key
         self.algorithm = algorithm
         self.custom_validator = custom_validator
 
-    def encode(self, data: dict) -> str:
+    def encode(
+        self,
+        data: dict,
+        expires_delta: timedelta = None,
+    ) -> str:
         to_encode = data.copy()
+        if expires_delta:
+            expire = datetime.utcnow() + expires_delta
+            to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(
             to_encode,
             self.privat_key,
@@ -34,13 +45,14 @@ class TokenManager:
             decoded_token = jwt.decode(
                 token,
                 self.public_key,
-                algorithms=[self.algorithm]
+                algorithms=[self.algorithm],
             )
             return decoded_token
-        except jwt.ExpiredSignatureError:
-            return None
+        except jwt.ExpiredSignatureError as e:
+            raise e
         except Exception as e:
             logging.exception(e)
+            raise e
 
     def validate_exceptions(self, decoded_token: dict) -> bool:
         if expires_at := decoded_token.get('exp'):
@@ -57,4 +69,4 @@ class TokenManager:
             else:
                 return decoded_token
         else:
-            raise Exception("Token can not be decoded")
+            raise BadJwtException("Token can not be decoded")

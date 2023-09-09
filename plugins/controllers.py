@@ -49,8 +49,10 @@ class DatabaseManager(AbstractPlugin):
                             result = await func(*args, conn=conn, **kwargs)
                     return result
                 except ValidationError as e:
+                    logging.exception(e)
                     raise_exception(e)
                 except HTTPException as e:
+                    logging.exception(e)
                     raise_exception(e)
                 except Exception as e:
                     logging.exception(e)
@@ -102,7 +104,21 @@ def select_q(datatable, **data):
         f'FROM '
         f'    {datatable} '
         f'WHERE '
-        f'    {conditions} '
+        f'    {" and ".join(conditions)} '
+    )
+    return query, *values
+
+
+def select_q_detailed(datatable, model, **data):
+    conditions, values = generate_placeholder(data)
+    fields = get_fields(model)
+    query = (
+        f'SELECT '
+            f'{", ".join(fields)} '
+        f'FROM '
+        f'    {datatable} '
+        f'WHERE '
+        f'    {" and ".join(conditions)} '
     )
     return query, *values
 
@@ -142,3 +158,7 @@ def validate(func):
             )
         return await func(*args, **kwargs)
     return wrapper
+
+
+def get_fields(model):
+    return model.__fields__.keys()
