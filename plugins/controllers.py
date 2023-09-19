@@ -48,6 +48,9 @@ class DatabaseManager(AbstractPlugin):
                         async with cls.Config.POOL.acquire() as conn:
                             result = await func(*args, conn=conn, **kwargs)
                     return result
+                except asyncpg.exceptions.UniqueViolationError as e:
+                    e.status_code = 422
+                    raise_exception(e)
                 except ValidationError as e:
                     logging.exception(e)
                     raise_exception(e)
@@ -56,6 +59,7 @@ class DatabaseManager(AbstractPlugin):
                     raise_exception(e)
                 except Exception as e:
                     logging.exception(e)
+                    # raise_exception(e)
             return wrapper
         return decorator
 
