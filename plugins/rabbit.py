@@ -25,7 +25,7 @@ class RabbitManager(AbstractPlugin):
         return await aio_pika.connect_robust(
             host=host,
             port=port,
-            user=user,
+            login=user,
             password=password
         )
 

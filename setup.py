@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='fastapiplugins',
-    version='0.1.2',
+    version='0.3.0',
     description='Simplified version of plugins from Rolefr for fastapi',
     url='https://github.com/Myortv/fastapi-plugins',
     author='myortv',
@@ -15,7 +15,9 @@ setup(
         'fastapi',
         'pydantic',
         'pyignite',
-        'ujson'
+        'ujson',
+        'PyJWT',
+        'aio-pika'
     ],
     classifiers=[
         '???'
