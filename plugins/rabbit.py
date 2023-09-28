@@ -144,10 +144,10 @@ class RabbitManager(AbstractPlugin):
                                 exchange_name,
                                 exchange_type,
                             )
+                            kwargs['channel'] = ch
+                            kwargs['exchange'] = exchange
                             result = await func(
                                 *args,
-                                channel=ch,
-                                exchange=exchange,
                                 **kwargs,
                             )
                     return result
