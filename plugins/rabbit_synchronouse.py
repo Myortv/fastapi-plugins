@@ -3,6 +3,7 @@ import pika
 
 from plugins.base import AbstractPlugin
 
+
 class RabbitManager(AbstractPlugin):
     class Config:
         CONNECTION: pika.connection.Connection

@@ -1,5 +1,8 @@
+from typing import Callable
 import logging
 import asyncio
+
+import ujson
 
 import aio_pika
 from aio_pika.abc import AbstractRobustConnection
@@ -14,6 +17,8 @@ class RabbitManager(AbstractPlugin):
         CONNECTION_POOL: Pool
         CHANNEL_POOL: Pool
         SUBSCRIBERS: dict = dict()
+        dumps: Callable = ujson.dumps
+        loads: Callable = ujson.loads
 
     @staticmethod
     async def get_connection(
@@ -91,7 +96,7 @@ class RabbitManager(AbstractPlugin):
         async with cls.Config.CHANNEL_POOL.acquire() as channel:
             for exchange, message_key in cls.Config.SUBSCRIBERS.keys():
                 queue = await channel.declare_queue(
-                    exchange + '_' + message_key
+                    exchange + '.' + message_key
                 )
                 exchange_obj = await channel.declare_exchange(
                     exchange,
@@ -102,14 +107,16 @@ class RabbitManager(AbstractPlugin):
                 async def callback(message):
                     async with message.process():
                         func = cls.Config.SUBSCRIBERS[(exchange, message_key)]
-                        await func(message.body.decode())
+                        await func(
+                            cls.Config.loads(message.body.decode())
+                        )
 
+                await queue.consume(callback)
                 logging.debug(
                     "Fuction "
                     f"{cls.Config.SUBSCRIBERS[(exchange, message_key)]} "
                     "starts consuming"
                 )
-                await queue.consume(callback)
 
     @classmethod
     async def stop(cls,) -> None:
