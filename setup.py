@@ -17,7 +17,7 @@ setup(
     ],
     extras_require={
         'async': ['aio-pika', 'aiohttp', 'asyncpg'],
-        'sync': ['pika', 'requests', 'psycopg2'],
+        'sync': ['pika', 'requests', 'psycopg2-binary'],
     },
     classifiers=[
         '???'
