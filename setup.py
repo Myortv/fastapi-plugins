@@ -8,7 +8,7 @@ setup(
     author='myortv',
     author_email='myortv@proton.me',
     license='MIT',
-    pakages=['fastapiplugins'],
+    packages=['fastapiplugins'],
     install_requires=[
         'fastapi',
         'pydantic',

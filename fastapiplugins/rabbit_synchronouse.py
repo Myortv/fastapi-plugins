@@ -1,7 +1,7 @@
 import logging
 import pika
 
-from plugins.base import AbstractPlugin
+from fastapiplugins.base import AbstractPlugin
 
 
 class RabbitManager(AbstractPlugin):

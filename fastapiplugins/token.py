@@ -41,18 +41,12 @@ class TokenManager:
         return encoded_jwt
 
     def decode(self, token: str) -> dict:
-        try:
-            decoded_token = jwt.decode(
-                token,
-                self.public_key,
-                algorithms=[self.algorithm],
-            )
-            return decoded_token
-        except jwt.ExpiredSignatureError as e:
-            raise e
-        except Exception as e:
-            logging.exception(e)
-            raise e
+        decoded_token = jwt.decode(
+            token,
+            self.public_key,
+            algorithms=[self.algorithm],
+        )
+        return decoded_token
 
     def validate_exceptions(self, decoded_token: dict) -> bool:
         if expires_at := decoded_token.get('exp'):

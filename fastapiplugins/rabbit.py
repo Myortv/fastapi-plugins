@@ -9,7 +9,7 @@ from aio_pika.abc import AbstractRobustConnection
 from aio_pika.pool import Pool
 from aio_pika import Channel, ExchangeType
 
-from plugins.base import AbstractPlugin
+from fastapiplugins.base import AbstractPlugin
 
 
 class RabbitManager(AbstractPlugin):
@@ -142,24 +142,21 @@ class RabbitManager(AbstractPlugin):
         """
         def decorator(func):
             async def wrapper(*args, **kwargs):
-                try:
-                    if kwargs.get('channel', None):
-                        return await func(*args, **kwargs)
-                    else:
-                        async with cls.Config.CHANNEL_POOL.acquire() as ch:
-                            exchange = await ch.declare_exchange(
-                                exchange_name,
-                                exchange_type,
-                            )
-                            kwargs['channel'] = ch
-                            kwargs['exchange'] = exchange
-                            result = await func(
-                                *args,
-                                **kwargs,
-                            )
-                    return result
-                except Exception as e:
-                    logging.exception(e)
+                if kwargs.get('channel', None):
+                    return await func(*args, **kwargs)
+                else:
+                    async with cls.Config.CHANNEL_POOL.acquire() as ch:
+                        exchange = await ch.declare_exchange(
+                            exchange_name,
+                            exchange_type,
+                        )
+                        kwargs['channel'] = ch
+                        kwargs['exchange'] = exchange
+                        result = await func(
+                            *args,
+                            **kwargs,
+                        )
+                return result
             return wrapper
         return decorator
 
