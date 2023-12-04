@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Optional
 import logging
 import asyncio
 
@@ -7,9 +7,16 @@ import ujson
 import aio_pika
 from aio_pika.abc import AbstractRobustConnection
 from aio_pika.pool import Pool
-from aio_pika import Channel, ExchangeType
+from aio_pika import Channel, ExchangeType, Message, Queue
+
 
 from fastapiplugins.base import AbstractPlugin
+
+
+async def autodelete_queue_builder(
+    channel: Channel
+) -> Queue:
+    return await channel.declare_queue(auto_delete=True)
 
 
 class RabbitManager(AbstractPlugin):
@@ -77,7 +84,10 @@ class RabbitManager(AbstractPlugin):
         )
 
     @classmethod
-    async def start_consuming(cls) -> None:
+    async def start_consuming(
+        cls,
+        queue_builder: Optional[Callable] = autodelete_queue_builder,
+    ) -> None:
         """
             Start consuming messages. Should be called
             on project startup after RabbitManager.start()
@@ -95,18 +105,19 @@ class RabbitManager(AbstractPlugin):
         """
         async with cls.Config.CHANNEL_POOL.acquire() as channel:
             for exchange, message_key in cls.Config.SUBSCRIBERS.keys():
-                queue = await channel.declare_queue(
-                    exchange + '.' + message_key
-                )
+                queue = await queue_builder(channel)
                 exchange_obj = await channel.declare_exchange(
                     exchange,
                     ExchangeType.DIRECT,
                 )
                 await queue.bind(exchange_obj, routing_key=message_key)
 
-                async def callback(message):
+                async def callback(message: Message):
                     async with message.process():
-                        func = cls.Config.SUBSCRIBERS[(exchange, message_key)]
+                        info = message.info()
+                        func = cls.Config.SUBSCRIBERS[
+                            (info.get('exchange'), info.get('routing_key'))
+                        ]
                         await func(
                             cls.Config.loads(message.body.decode())
                         )

@@ -1,4 +1,4 @@
-from typing import Callable, Any, Tuple, Optional
+from typing import Callable, Any, Tuple, Optional, List
 
 from pydantic import BaseModel
 
@@ -114,15 +114,20 @@ def update_q(
 
 def select_q(
     datatable: str,
+    ordering: List[str] = None,
     **data: dict[Any],
 ) -> Tuple[str, Any]:
     conditions, values = generate_placeholder(data)
+    ordering_str = ""
+    if ordering:
+        ordering_str = f"ORDER BY\n\t{', '.join(ordering)}"
     query = (
         f'SELECT *\n'
         f'FROM\n'
         f'\t{datatable}\n'
         f'WHERE\n'
         f'\t{" AND ".join(conditions)}\n'
+        f'{ordering_str}\n'
     )
     return query, *values
 
@@ -130,10 +135,14 @@ def select_q(
 def select_q_detailed(
     datatable: str,
     model: dict | BaseModel,
+    ordering: List[str] = None,
     **data: dict[Any],
 ) -> Tuple[str, Any]:
     conditions, values = generate_placeholder(data)
     fields = get_fields(model)
+    ordering_str = ""
+    if ordering:
+        ordering_str = f"ORDER BY\n\t{', '.join(ordering)}"
     query = (
         f'SELECT\n'
         f'\t{", ".join(fields)}\n'
@@ -141,17 +150,20 @@ def select_q_detailed(
         f'\t{datatable}\n'
         f'WHERE\n'
         f'\t{" and ".join(conditions)}\n'
+        f'{ordering_str}\n'
     )
     return query, *values
 
 
 def unpack_data(data: dict | BaseModel) -> tuple[list]:
-    if isinstance(data, dict):
-        fields = list(data.keys())
-        values = list(data.values())
-        return fields, values
-    fields = list(data.__dict__.keys())
-    values = list(data.__dict__.values())
+    if isinstance(data, BaseModel):
+        data = data.model_dump()
+    # if isinstance(data, dict):
+    fields = list(data.keys())
+    values = list(data.values())
+        # return fields, values
+        # fields = list(data.)
+        # values = list(data.__dict__.values())
     assert len(fields) == len(values)
     return fields, values
 
