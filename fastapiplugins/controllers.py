@@ -121,12 +121,17 @@ def select_q(
     ordering_str = ""
     if ordering:
         ordering_str = f"ORDER BY\n\t{', '.join(ordering)}"
+    sorting_str = ""
+    if data:
+        sorting_str = (
+            f'WHERE\n'
+            f'\t{" and ".join(conditions)}'
+        )
     query = (
         f'SELECT *\n'
         f'FROM\n'
         f'\t{datatable}\n'
-        f'WHERE\n'
-        f'\t{" AND ".join(conditions)}\n'
+        f'{sorting_str}\n'
         f'{ordering_str}\n'
     )
     return query, *values
@@ -143,13 +148,18 @@ def select_q_detailed(
     ordering_str = ""
     if ordering:
         ordering_str = f"ORDER BY\n\t{', '.join(ordering)}"
+    sorting_str = ""
+    if data:
+        sorting_str = (
+            f'WHERE\n'
+            f'\t{" and ".join(conditions)}'
+        )
     query = (
         f'SELECT\n'
         f'\t{", ".join(fields)}\n'
         f'FROM\n'
         f'\t{datatable}\n'
-        f'WHERE\n'
-        f'\t{" and ".join(conditions)}\n'
+        f'{sorting_str}\n'
         f'{ordering_str}\n'
     )
     return query, *values
