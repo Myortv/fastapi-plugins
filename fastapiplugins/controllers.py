@@ -1,4 +1,4 @@
-from typing import Callable, Any, Tuple, Optional, List
+from typing import Callable, Any, Tuple, List
 
 from pydantic import BaseModel
 
@@ -76,11 +76,21 @@ def insert_q(
     return query, *values
 
 
+# def condition_constuct(
+#     field: str,
+#     i: int,
+#     value: Any,
+# ) -> str:
+#     if value is None:
+#         return f'{field} is ${i}'
+#     return f'{field} = ${i}'
+
+
 def delete_q(
     datatable: str,
     **data: dict[Any],
 ) -> Tuple[str, Any]:
-    conditions, values = generate_placeholder(
+    conditions, values = generate_condidion(
         data,
     )
     query = (
@@ -99,7 +109,7 @@ def update_q(
     **conditions: dict[Any],
 ) -> Tuple[str, Any]:
     placeholder, values = generate_placeholder(data)
-    condition, condition_values = generate_placeholder(
+    condition, condition_values = generate_condidion(
         conditions,
         len(values),
     )
@@ -117,7 +127,9 @@ def select_q(
     ordering: List[str] = None,
     **data: dict[Any],
 ) -> Tuple[str, Any]:
-    conditions, values = generate_placeholder(data)
+    conditions, values = generate_condidion(
+        data,
+    )
     ordering_str = ""
     if ordering:
         ordering_str = f"ORDER BY\n\t{', '.join(ordering)}"
@@ -143,7 +155,7 @@ def select_q_detailed(
     ordering: List[str] = None,
     **data: dict[Any],
 ) -> Tuple[str, Any]:
-    conditions, values = generate_placeholder(data)
+    conditions, values = generate_condidion(data)
     fields = get_fields(model)
     ordering_str = ""
     if ordering:
@@ -165,20 +177,23 @@ def select_q_detailed(
     return query, *values
 
 
-def unpack_data(data: dict | BaseModel) -> tuple[list]:
+def unpack_data(data: dict | BaseModel) -> tuple[list, list]:
     if isinstance(data, BaseModel):
         data = data.model_dump()
     # if isinstance(data, dict):
     fields = list(data.keys())
     values = list(data.values())
-        # return fields, values
-        # fields = list(data.)
-        # values = list(data.__dict__.values())
+    # return fields, values
+    # fields = list(data.)
+    # values = list(data.__dict__.values())
     assert len(fields) == len(values)
     return fields, values
 
 
-def generate_placeholder(data: dict | BaseModel, i: int = 0) -> tuple[list]:
+def generate_placeholder(
+    data: dict | BaseModel,
+    i: int = 0,
+) -> tuple[list]:
     """
         returns pairs like 'field_name = $1'
         and values
@@ -188,6 +203,29 @@ def generate_placeholder(data: dict | BaseModel, i: int = 0) -> tuple[list]:
     for field in fields:
         i += 1
         pair.append(f'{field} = ${i}')
+    return pair, values
+
+
+def generate_condidion(
+    data: dict | BaseModel,
+    i: int = 0,
+    # pair_construct:
+    # Callable[[str, int, Any], str] = lambda field, i, value: f'{field} = ${i}'
+) -> tuple[list]:
+    """
+        returns pairs like 'field_name = $1'
+        and values
+    """
+    fields, values = unpack_data(data)
+    pair = []
+    for field, value in zip(fields, values.copy()):
+        if value is None:
+            pair.append(f'{field} is null')
+            values.remove(None)
+        else:
+            i += 1
+            pair.append(f'{field} = ${i}')
+            # pair.append(pair_construct(field, i, value))
     return pair, values
 
 
