@@ -7,6 +7,12 @@ from typing import Callable
 import jwt
 
 
+from fastapiplugins.exceptions import ExceptionMessage, get_exception_id
+
+
+ORIGIN = 'PLUGINSTOKENS'
+
+
 class BadJwtException(Exception):
     pass
 
@@ -41,18 +47,12 @@ class TokenManager:
         return encoded_jwt
 
     def decode(self, token: str) -> dict:
-        try:
-            decoded_token = jwt.decode(
-                token,
-                self.public_key,
-                algorithms=[self.algorithm],
-            )
-            return decoded_token
-        except jwt.ExpiredSignatureError as e:
-            raise e
-        except Exception as e:
-            logging.exception(e)
-            raise e
+        decoded_token = jwt.decode(
+            token,
+            self.public_key,
+            algorithms=[self.algorithm],
+        )
+        return decoded_token
 
     def validate_exceptions(self, decoded_token: dict) -> bool:
         if expires_at := decoded_token.get('exp'):
@@ -70,3 +70,19 @@ class TokenManager:
                 return decoded_token
         else:
             raise BadJwtException("Token can not be decoded")
+
+
+exceptions = {
+    jwt.exceptions.ExpiredSignatureError:
+        ExceptionMessage(
+            id=get_exception_id(ORIGIN, 'expiredsignatureerror'),
+            status=401,
+            title="jwt: expiredsignatureerror",
+        ),
+    jwt.exceptions.DecodeError:
+        ExceptionMessage(
+            id=get_exception_id(ORIGIN, 'decodeerror'),
+            status=401,
+            title="jwt: decodeerror",
+        ),
+}
